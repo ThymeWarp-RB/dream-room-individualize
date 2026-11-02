@@ -5,7 +5,7 @@ cd /d "%~dp0"
 
 where git >nul 2>nul
 if errorlevel 1 (
-  echo [错误] 没找到 git，先装 https://git-scm.com/ （一路下一步即可）
+  echo [错误] 没找到 git，先装 https://git-scm.com/ （一路下一步）
   pause
   exit /b 1
 )
@@ -15,45 +15,55 @@ if not exist ".git" (
   exit /b 1
 )
 
-echo.
-echo   1. 浏览器打开你的仓库页面
-echo   2. 点右上角绿色 [ Code ] 按钮
-echo   3. 复制那串 https://github.com/xxx/yyy.git
-echo.
-set /p REPO_URL=把仓库地址粘贴到这里，然后回车：
+rem ---------- 1. 有没有记住仓库地址 ----------
+for /f "delims=" %%u in ('git remote get-url origin 2^>nul') do set "EXISTING=%%u"
 
-rem 去掉可能的引号和空格
-set "REPO_URL=%REPO_URL:"=%"
-set "REPO_URL=%REPO_URL: =%"
-if "%REPO_URL%"=="" ( echo 地址是空的，退出。 & pause & exit /b 1 )
+if defined EXISTING (
+  echo 已记住仓库地址：
+  echo   !EXISTING!
+  echo.
+  set /p CHANGE=要换一个仓库吗？直接回车 = 不变，输 y = 重填：
+  if /I "!CHANGE!"=="y" set "EXISTING="
+)
 
-rem 没写 .git 就补上
-if /I not "%REPO_URL:~-4%"==".git" set "REPO_URL=%REPO_URL%.git"
+if not defined EXISTING (
+  echo.
+  echo   在仓库页面点绿色 [ Code ] 按钮，复制 https://github.com/xxx/yyy.git
+  echo.
+  set /p REPO_URL=把仓库地址粘贴到这里，然后回车：
+  set "REPO_URL=!REPO_URL:"=!"
+  set "REPO_URL=!REPO_URL: =!"
+  if "!REPO_URL!"=="" ( echo 地址是空的，退出。 & pause & exit /b 1 )
+  if /I not "!REPO_URL:~-4!"==".git" set "REPO_URL=!REPO_URL!.git"
+  git remote remove origin >nul 2>nul
+  git remote add origin "!REPO_URL!"
+)
 
 echo.
-echo 目标仓库：%REPO_URL%
+echo ============================================================
+echo   正在上传……
+echo   第一次会弹一个 GitHub 登录窗（可能躲在其他窗口后面），
+echo   点绿色 Authorize / 浏览器里点授权即可。
+echo ============================================================
 echo.
 
-git remote remove origin >nul 2>nul
-git remote add origin "%REPO_URL%"
-
-echo 正在上传……第一次会弹浏览器让你登录 GitHub，点 Authorize 就行。
-echo.
 git push -u origin main
 
 if errorlevel 1 (
   echo.
   echo ------------------------------------------------------------
-  echo  第一次没推上去。如果上面写的是 rejected / fetch first，
-  echo  说明你建仓库时勾了 README，仓库里已经有东西了。
-  echo  这个仓库里本来没有你要保留的文件，可以直接覆盖：
+  echo  第一次没推上去。
+  echo   提示 rejected / fetch first  =^> 仓库里已经有东西（比如 README），
+  echo   这个仓库没有你要保留的文件，可以直接覆盖。
+  echo   提示 Authentication failed  =^> 登录没完成，重跑本文件再授权一次。
   echo ------------------------------------------------------------
   echo.
-  set /p OW=输入 y 直接覆盖：
-  if /I "%OW%"=="y" (
+  set /p OW=要直接覆盖远端内容吗？输 y 覆盖，直接回车退出：
+  if /I "!OW!"=="y" (
      git push --force -u origin main
      if errorlevel 1 (
-        echo 还是失败。把上面的红字发给帮你的人看看。
+        echo.
+        echo 还是失败。把上面的红字拍下来发给帮你的人。
         pause
         exit /b 1
      )
@@ -63,9 +73,13 @@ if errorlevel 1 (
   )
 )
 
+for /f "delims=" %%u in ('git remote get-url origin 2^>nul') do set "URL=%%u"
+set "WEB=!URL:.git=!"
+
 echo.
 echo ============================================================
-echo   上传完成！浏览器会打开你的仓库页面，刷新就能看到文件。
+echo   上传完成！
+echo   !WEB!
 echo ============================================================
-start "" "%REPO_URL:.git=%"
+start "" "!WEB!"
 pause
