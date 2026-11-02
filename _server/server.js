@@ -317,6 +317,18 @@ function lanAddresses(){
   return out;
 }
 
+server.on('error', e => {
+  if (e.code === 'EADDRINUSE') {
+    console.log('');
+    console.log(`  端口 ${PORT} 已经被占用 —— 服务多半已经在跑了。`);
+    console.log(`  直接打开 http://127.0.0.1:${PORT}/ 就行，不用再启动一次。`);
+    console.log('');
+  } else {
+    console.error('启动失败：', e.message);
+  }
+  process.exit(1);
+});
+
 loadDb();
 server.listen(PORT, HOST, () => {
   const n = Object.keys(DB.accounts).length;
