@@ -1,0 +1,20 @@
+# 只把「网页 + 后端 + 文档」纳入版本库；其余教学资料、抓取缓存、构建脚本一律不进仓库
+/*
+!/.gitignore
+!/.gitattributes
+!/README.md
+!/LICENSE
+!/index.html
+!/启动后端.bat
+!/启动公网隧道.bat
+!/下载cloudflared.bat
+!/推送到GitHub.bat
+!/_server/
+!/docs/
+
+# 运行时数据：学生账号和单词本，绝不提交
+_server/data/db.json
+_server/data/db.json.tmp
+
+# 本地下载的二进制，各人自己下
+cloudflared.exe
