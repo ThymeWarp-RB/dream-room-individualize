@@ -116,15 +116,16 @@ node _server/server.js
 
 ---
 
-## 发布到 GitHub
+## 上传到 GitHub
 
 仓库已经初始化好（`main` 分支、首次提交已就位），只差推上去：
 
-1. 在 <https://github.com/new> 建一个空仓库（**不要**勾 README / .gitignore / LICENSE）
-2. 双击 **`推送到GitHub.bat`**，按提示输入用户名和仓库名
-3. 第一次推送会弹浏览器登录 GitHub，授权一次即可
+1. 在 GitHub 建好仓库（**Private** 即可，学生用的是网址不是仓库）
+2. 双击 **`上传到GitHub.bat`**
+3. 把仓库页 `Code → HTTPS` 里的地址粘进去，回车
+4. 第一次会弹浏览器，点 **Authorize** 授权，等它跑完
 
-也可以手动来：
+也可以手动：
 
 ```bash
 git remote add origin https://github.com/<用户名>/<仓库名>.git

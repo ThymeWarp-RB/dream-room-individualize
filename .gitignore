@@ -8,7 +8,7 @@
 !/启动后端.bat
 !/启动公网隧道.bat
 !/下载cloudflared.bat
-!/推送到GitHub.bat
+!/上传到GitHub.bat
 !/_server/
 !/docs/
 
