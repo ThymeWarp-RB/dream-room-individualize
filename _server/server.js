@@ -121,6 +121,8 @@ const MIME = {
   '.webp': 'image/webp',
   '.svg': 'image/svg+xml',
   '.mp3': 'audio/mpeg',
+  '.wav': 'audio/wav',
+  '.m4a': 'audio/mp4',
   '.ico': 'image/x-icon',
 };
 const ALLOW = new Set(Object.keys(MIME));
@@ -266,9 +268,37 @@ function serveStatic(req, res, url){
 
   fs.stat(file, (err, st) => {
     if (err || !st.isFile()) { res.writeHead(404); return res.end('not found'); }
+
+    const type = MIME[ext];
+    const range = req.headers.range;
+
+    /* 音频需要 Range 才能在页面里「跳着播」某个词 */
+    if (range && type.startsWith('audio/')) {
+      const m = /^bytes=(\d*)-(\d*)$/.exec(range);
+      if (m) {
+        let start = m[1] ? parseInt(m[1], 10) : 0;
+        let end = m[2] ? parseInt(m[2], 10) : st.size - 1;
+        if (isNaN(start) || isNaN(end) || start > end || start >= st.size) {
+          res.writeHead(416, { 'Content-Range': `bytes */${st.size}` });
+          return res.end();
+        }
+        end = Math.min(end, st.size - 1);
+        res.writeHead(206, {
+          'Content-Type': type,
+          'Content-Length': end - start + 1,
+          'Content-Range': `bytes ${start}-${end}/${st.size}`,
+          'Accept-Ranges': 'bytes',
+          'Cache-Control': 'no-cache',
+        });
+        fs.createReadStream(file, { start, end }).pipe(res);
+        return;
+      }
+    }
+
     res.writeHead(200, {
-      'Content-Type': MIME[ext],
+      'Content-Type': type,
       'Content-Length': st.size,
+      'Accept-Ranges': 'bytes',
       'Cache-Control': 'no-cache',
     });
     fs.createReadStream(file).pipe(res);
